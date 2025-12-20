@@ -1,10 +1,13 @@
 package uk.ac.cam.bjc76.boggle.domain;
 
+import org.springframework.stereotype.Service;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalTime;
 import java.util.ArrayList;
 
+@Service
 public class GameController {
     private LocalTime endTime;
     private PlayerGame player1;

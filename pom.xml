@@ -19,7 +19,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <vaadin.version>25.0.0</vaadin.version>
+        <vaadin.version>24.5.6</vaadin.version>
     </properties>
 
     <dependencyManagement>
@@ -49,6 +49,12 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
     <build>
@@ -56,7 +62,11 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>uk.ac.cam.bjc76.boggle.Application</mainClass>
+                </configuration>
             </plugin>
         </plugins>
+
     </build>
 </project>

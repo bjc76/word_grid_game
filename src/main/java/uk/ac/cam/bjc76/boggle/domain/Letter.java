@@ -44,4 +44,8 @@ public class Letter {
         return false;
     }
 
+    public String toString() {
+        return value;
+    }
+
 }

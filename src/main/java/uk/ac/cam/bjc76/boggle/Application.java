@@ -1,4 +1,4 @@
-package uk.ac.cam.bjc76.boggle.app;
+package uk.ac.cam.bjc76.boggle;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
