@@ -1,39 +1,33 @@
 package uk.ac.cam.bjc76.boggle.app;
 
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.shared.Registration;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 
 public class GameEventBroadcaster {
-    private static UI player1;
-    private static UI player2;
+    private static final Map<UI, Consumer<String>> players = new ConcurrentHashMap<>();
+    private static final Executor executor = Executors.newSingleThreadExecutor();
 
-    public static synchronized void register(UI ui) {
-        if (player1 == null) {
-            player1 = ui;
-        } else if (player2 == null) {
-            player2 = ui;
-        } else {
+    public static synchronized Registration register(UI ui, Consumer<String> listener) {
+        if (players.size() >= 2) {
             throw new IllegalStateException("Max 2 players");
         }
-    }
-
-    public static synchronized void unregister(UI ui) {
-        if (ui == player1) {
-            player1 = null;
-        } else if (ui == player2) {
-            player2 = null;
-        }
+        players.put(ui, listener);
+        return () -> players.remove(ui);
     }
 
     public static synchronized void sendGameUpdate(String msg, UI sender) {
-        UI recipient = (sender == player1) ? player2 : player1;
-        if (recipient != null) {
-            recipient.access(
-                    () -> {
-                        
-                    }
-            )
-        }
+        players.forEach((ui, listener) -> {
+            if (ui != sender) {
+                executor.execute(() -> listener.accept(msg));
+            }
+        });
     }
 
 

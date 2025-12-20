@@ -27,6 +27,10 @@ public class WordGrid {
         return letters.get(index);
     }
 
+    public ArrayList<Letter> getLetters() {
+        return letters;
+    }
+
     public void printGrid() {
         for (int i=0; i<dimension; i++) {
             System.out.print(" | ");
@@ -36,5 +40,7 @@ public class WordGrid {
             System.out.print("|\n");
         }
     }
+
+
 
 }

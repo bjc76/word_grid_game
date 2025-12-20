@@ -17,7 +17,7 @@ public class Letter {
     }
 
     public boolean validPlayerUsage(Player player) {
-        if (currentPlayer.isEmpty()) {
+        if (!currentPlayer.isPresent()) {
             return true;
         } else if (Objects.equals(player, currentPlayer)) {
             return true;
@@ -26,6 +26,7 @@ public class Letter {
         }
     }
 
+
     public void setPlayer(Player player) {
         currentPlayer = Optional.of(player);
     }
@@ -33,4 +34,14 @@ public class Letter {
     public void setUnoccupied() {
         currentPlayer = Optional.empty();
     }
+
+    public boolean checkOwnedByOtherPlayer(Player player) {
+        if (currentPlayer.isPresent()) {
+            if (!Objects.equals(player, currentPlayer)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
