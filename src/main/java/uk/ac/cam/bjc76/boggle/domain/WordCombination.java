@@ -10,7 +10,7 @@ public class WordCombination {
 
     public WordCombination(ArrayList<Letter> letters) {
         this.letters = letters;
-        decayExpiry = LocalTime.now().plusSeconds(letters.size() * 3);
+        decayExpiry = LocalTime.now().plusSeconds(letters.size() * 3L);
     }
 
     public String getWord() {

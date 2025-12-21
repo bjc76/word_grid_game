@@ -6,19 +6,19 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 @Service
 public class GameFactory {
-    public GameController startRecievedGame(String msg) throws SQLException, IOException {
-        ArrayList<String> lettersAsStrings = new ArrayList<>();
-        for (int i = 1; i < msg.length()-7; i++) {
-            lettersAsStrings.add(String.valueOf(msg.charAt(i)));
-        }
-        LocalTime endTime = LocalTime.parse(msg.substring(msg.length()-7));
+    public GameController startReceivedGame(String msg) throws SQLException, IOException {
+        String[] msgSections = msg.split("\\|");
+        ArrayList<String> lettersAsStrings = new ArrayList<>(Arrays.asList(msgSections[1].split(" ")));
+        lettersAsStrings.removeFirst();
+        LocalTime endTime = LocalTime.parse(msgSections[2]);
         return new GameController(
                 "ben",
                 "bob",
-                5,
+                4,
                 lettersAsStrings,
                 endTime
         );
@@ -26,11 +26,11 @@ public class GameFactory {
 
     public GameController startNewGame() throws SQLException, IOException {
         return new GameController(
-                "ben",
                 "bob",
-                25,
-                LetterGenerator.generate(25),
-                LocalTime.now()
+                "ben",
+                4,
+                LetterGenerator.generate(16),
+                LocalTime.now().plusMinutes(4)
         );
     }
 }

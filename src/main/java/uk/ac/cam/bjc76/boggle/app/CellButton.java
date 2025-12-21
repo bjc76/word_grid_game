@@ -10,6 +10,7 @@ public class CellButton {
     public CellButton (GridCell cellController) {
         this.cellController = cellController;
         button = new Button(cellController.getValue());
+        button.getStyle().set("background-image", "none");
         button.setWidth("60px");
         button.setHeight("60px");
         button.addClickListener(e -> {
@@ -30,10 +31,16 @@ public class CellButton {
 
     public void deselect() {
         cellController.deselect();
+        updateButtonColour();
     }
 
     private void updateButtonColour() {
         button.getStyle().set("background-color", cellController.getColour());
+        if (cellController.isSelected() | cellController.isOwnedByOtherPlayer()) {
+            button.getStyle().set("color", "white");
+        } else {
+            button.getStyle().set("color", "black");
+        }
     }
 
 }

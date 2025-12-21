@@ -2,6 +2,7 @@ package uk.ac.cam.bjc76.boggle.domain;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class PlayerGame {
     private WordGrid grid;
@@ -14,7 +15,7 @@ public class PlayerGame {
         this.grid = grid;
     }
 
-    public void goAttempt(ArrayList<Letter> lettersUsed) throws SQLException {
+    public boolean goAttempt(ArrayList<Letter> lettersUsed) throws SQLException {
         StringBuilder word = new StringBuilder();
         for (Letter l : lettersUsed) {
             word.append(l.getValue());
@@ -29,15 +30,17 @@ public class PlayerGame {
                 }
             }
             if (validLettersUsed) {
-                for (Letter l : newWord.getLetters()) {
+                for (Letter l : lettersUsed) {
                     l.setPlayer(player);
                 }
                 bank.insertNewCombination(newWord);
                 decayingWords.insertNewCombination(newWord);
-                player.increaseScore(lettersUsed.toArray().length);
+                player.increaseScore(lettersUsed.size());
                 System.out.println("Valid input combination for " + player.getName());
+                return true;
             }
         }
+        return false;
     }
 
     public void checkDecayingWords() {
@@ -49,5 +52,29 @@ public class PlayerGame {
         }
     }
 
+    public void insertUsedWord(ArrayList<Letter> letters) {
+        WordCombination newWord = new WordCombination(letters);
+        bank.insertNewCombination(newWord);
+        decayingWords.insertNewCombination(newWord);
+        for (Letter l : letters) {
+            l.setPlayer(player);
+        }
+        player.increaseScore(letters.size());
+        System.out.println("Valid input combination for " + player.getName());
+    }
+
+    public boolean checkIfWordAlreadyUsed(ArrayList<Letter> letters) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Letter l : letters) {
+            stringBuilder.append(l.getValue());
+        }
+        String word = String.valueOf(stringBuilder);
+        for (WordCombination w : bank.getCombinations()) {
+            if (Objects.equals(w.getWord(), word)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

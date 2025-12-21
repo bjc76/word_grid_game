@@ -1,6 +1,5 @@
 package uk.ac.cam.bjc76.boggle.domain;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class WordBank {

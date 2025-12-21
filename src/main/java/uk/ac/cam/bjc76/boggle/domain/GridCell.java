@@ -2,7 +2,6 @@ package uk.ac.cam.bjc76.boggle.domain;
 
 public class GridCell {
     Letter cellLetter;
-    boolean selected = false;
     Player homePlayer;
 
     public GridCell (Letter cellLetter, Player homePlayer) {
@@ -12,15 +11,15 @@ public class GridCell {
 
     public String getColour() {
         if (cellLetter.checkOwnedByOtherPlayer(homePlayer)) {
-            if (selected) {
-                return "#";
+            if (cellLetter.isSelected()) {
+                return "#a4240d";
             } else {
-                return "#";
+                return "#f05d42";
             }
-        } else if (selected) {
-            return "#";
+        } else if (cellLetter.isSelected()) {
+            return "#c5c7c7";
         } else {
-            return "#";
+            return "#f0f1f1";
         }
     }
 
@@ -28,15 +27,19 @@ public class GridCell {
         return cellLetter.getValue();
     }
 
+    public boolean isOwnedByOtherPlayer() {
+        return cellLetter.checkOwnedByOtherPlayer(homePlayer);
+    }
+
     public boolean isSelected() {
-        return selected;
+        return cellLetter.isSelected();
     }
 
     public void toggleSelected() {
-        selected = !selected;
+        cellLetter.toggleSelected();
     }
 
     public void deselect() {
-        selected = false;
+        cellLetter.deSelect();
     }
 }

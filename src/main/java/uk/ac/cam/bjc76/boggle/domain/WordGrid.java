@@ -1,7 +1,10 @@
 package uk.ac.cam.bjc76.boggle.domain;
 
+import org.checkerframework.checker.units.qual.A;
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class WordGrid {
     private int dimension;
@@ -31,6 +34,20 @@ public class WordGrid {
         return letters;
     }
 
+    public int indexLetter(Letter letter) {
+        return letters.indexOf(letter);
+    }
+
+    public ArrayList<Letter> getSelectedLetters() {
+        ArrayList<Letter> selectedLetters = new ArrayList<>();
+        for (Letter l : letters) {
+            if (l.isSelected()) {
+                selectedLetters.add(l);
+            }
+        }
+        return selectedLetters;
+    }
+
     public void printGrid() {
         for (int i=0; i<dimension; i++) {
             System.out.print(" | ");
@@ -40,6 +57,55 @@ public class WordGrid {
             System.out.print("|\n");
         }
     }
+
+    public boolean checkLettersAreJoined(ArrayList<Letter> wordLetters) {
+        ArrayList<Integer> validIndexes = new ArrayList<>();
+        int currentIndex = letters.indexOf(wordLetters.getFirst());
+        for (Letter l : wordLetters.subList(1,wordLetters.size())) {
+            validIndexes.addAll(getEdges(currentIndex));
+            if (currentIndex >= dimension) {
+                validIndexes.addAll(getEdges(currentIndex-dimension));
+                validIndexes.add(currentIndex-dimension);
+            }
+            if (currentIndex + dimension < dimension * dimension){
+                validIndexes.addAll(getEdges(currentIndex+dimension));
+                validIndexes.add(currentIndex+dimension);
+            }
+
+            boolean isValid = false;
+            currentIndex = letters.indexOf(l);
+
+            //debugging
+            System.out.println("Next letter index: " + currentIndex);
+            System.out.println("Valid indexes for next letter");
+            for (int i : validIndexes) {
+                System.out.println(i);
+            }
+
+            for (Integer i : validIndexes) {
+                if (i == currentIndex) {
+                    isValid = true;
+                }
+            }
+            if (!isValid) {
+                return false;
+            }
+            validIndexes.clear();
+        }
+        return true;
+    }
+
+    private ArrayList<Integer> getEdges(int currentIndex) {
+        ArrayList<Integer> validIndexes = new ArrayList<>();
+        if (currentIndex % dimension != 0) {
+            validIndexes.add(currentIndex - 1);
+        }
+        if (currentIndex % dimension != dimension - 1) {
+            validIndexes.add(currentIndex + 1);
+        }
+        return validIndexes;
+    }
+
 
 
 
