@@ -1,14 +1,11 @@
 package uk.ac.cam.bjc76.boggle.domain;
 
-import org.checkerframework.checker.units.qual.A;
-
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class WordGrid {
-    private int dimension;
-    private ArrayList<Letter> letters;
+    private final int dimension;
+    private final ArrayList<Letter> letters;
 
     public WordGrid(int dimension, ArrayList<Letter> letters) throws IOException {
         this.dimension = dimension;
@@ -75,9 +72,6 @@ public class WordGrid {
             boolean isValid = false;
             currentIndex = letters.indexOf(l);
 
-            //debugging
-            System.out.println("Next letter index: " + currentIndex);
-            System.out.println("Valid indexes for next letter");
             for (int i : validIndexes) {
                 System.out.println(i);
             }

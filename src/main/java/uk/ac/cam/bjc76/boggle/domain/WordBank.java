@@ -3,7 +3,7 @@ package uk.ac.cam.bjc76.boggle.domain;
 import java.util.ArrayList;
 
 public class WordBank {
-    private ArrayList<WordCombination> wordBank = new ArrayList<>();
+    private final ArrayList<WordCombination> wordBank = new ArrayList<>();
 
     public void insertNewCombination(WordCombination w) {
         wordBank.addFirst(w);

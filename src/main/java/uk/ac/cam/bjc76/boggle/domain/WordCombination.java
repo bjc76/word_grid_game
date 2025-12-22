@@ -11,6 +11,9 @@ public class WordCombination {
     public WordCombination(ArrayList<Letter> letters) {
         this.letters = letters;
         decayExpiry = LocalTime.now().plusSeconds(letters.size() * 3L);
+    }
+
+    public void addLetterExpiry() {
         for (Letter l : letters) {
             l.setDecayExpiry(decayExpiry);
         }

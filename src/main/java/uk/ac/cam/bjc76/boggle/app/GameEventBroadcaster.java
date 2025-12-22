@@ -15,14 +15,12 @@ public class GameEventBroadcaster {
     private static final Executor executor = Executors.newSingleThreadExecutor();
 
     public static synchronized Registration register(UI ui, Consumer<String> listener) {
-        if (players.size() >= 2) {
-            throw new IllegalStateException("Max 2 players");
-        }
         players.put(ui, listener);
         return () -> players.remove(ui);
     }
 
     public static synchronized void sendGameUpdate(String msg, UI sender) {
+        System.out.println("Send update: "+msg);
         players.forEach((ui, listener) -> {
             if (ui != sender) {
                 executor.execute(() -> listener.accept(msg));

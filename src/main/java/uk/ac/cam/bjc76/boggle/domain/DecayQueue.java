@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.PriorityQueue;
 
 public class DecayQueue {
-    private PriorityQueue<WordCombination> decayQueue = new PriorityQueue<>(Comparator.comparing(WordCombination::getDecayTime));
+    private final PriorityQueue<WordCombination> decayQueue = new PriorityQueue<>(Comparator.comparing(WordCombination::getDecayTime));
 
     public ArrayList<WordCombination> getExpiredCombinations() {
         LocalTime presentTime = LocalTime.now();

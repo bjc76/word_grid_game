@@ -1,50 +1,46 @@
 package uk.ac.cam.bjc76.boggle.domain;
 
+import java.io.IOException;
 import java.sql.*;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Objects;
 
 public class PlayerGame {
-    private WordGrid grid;
-    private DecayQueue decayingWords = new DecayQueue();
-    private WordBank bank = new WordBank();
-    private Player player;
+    private final DecayQueue decayingWords = new DecayQueue();
+    private final WordBank bank = new WordBank();
+    private final Player player;
 
-    public PlayerGame(Player player, WordGrid grid) throws SQLException {
+    public PlayerGame(Player player) throws SQLException {
         this.player = player;
-        this.grid = grid;
     }
 
     public WordBank getBank() {
         return bank;
     }
 
-    public boolean goAttempt(ArrayList<Letter> lettersUsed) throws SQLException {
+    public boolean goAttempt(ArrayList<Letter> lettersUsed) throws SQLException, IOException {
         StringBuilder word = new StringBuilder();
         for (Letter l : lettersUsed) {
             word.append(l.getValue());
         }
         if (Validator.checkWordIsValid(String.valueOf(word).toLowerCase())) {
             WordCombination newWord = new WordCombination(lettersUsed);
-            boolean validLettersUsed = true;
             for (Letter l : newWord.getLetters()) {
                 if (!l.validPlayerUsage(player)) {
-                    validLettersUsed = false;
-                    System.out.println("Word can't be created as squares are already occupied");
+                    throw new IOException("Cells occupied by opponent");
                 }
             }
-            if (validLettersUsed) {
-                for (Letter l : lettersUsed) {
-                    l.setPlayer(player);
-                }
-                bank.insertNewCombination(newWord);
-                decayingWords.insertNewCombination(newWord);
-                player.increaseScore(lettersUsed.size());
-                return true;
+            newWord.addLetterExpiry();
+            for (Letter l : lettersUsed) {
+                l.setPlayer(player);
             }
+            bank.insertNewCombination(newWord);
+            decayingWords.insertNewCombination(newWord);
+            player.increaseScore(lettersUsed.size());
+            return true;
         }
-        return false;
+        throw new IOException("Word not in dictionary");
     }
 
     public void checkDecayingWords() {
@@ -55,6 +51,8 @@ public class PlayerGame {
                     if (l.getDecayTime().get().isBefore(LocalTime.now())) {
                         l.setUnoccupied();
                     }
+                } else {
+                    l.setUnoccupied();
                 }
             }
         }
@@ -62,6 +60,7 @@ public class PlayerGame {
 
     public void insertUsedWord(ArrayList<Letter> letters) {
         WordCombination newWord = new WordCombination(letters);
+        newWord.addLetterExpiry();
         bank.insertNewCombination(newWord);
         decayingWords.insertNewCombination(newWord);
         for (Letter l : letters) {

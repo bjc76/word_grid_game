@@ -5,6 +5,7 @@ import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -22,26 +23,25 @@ import java.io.IOException;
 import java.io.SyncFailedException;
 import java.sql.SQLException;
 import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Objects;
 
 @Route("")
 public class GridView extends VerticalLayout {
     private int DIMENSIONS = 6;
-    private int DURATION = 1;
+    private int DURATION = 2;
     private final GameFactory gameFactory = new GameFactory();
-    private ArrayList<CellButton> buttonList = new ArrayList<>();
+    private final ArrayList<CellButton> buttonList = new ArrayList<>();
     private Registration broadcasterRegistration;
     private GameController gameController;
     private Span scoreDisplay;
     private Span opponentScoreDisplay;
     private Span timeDisplay;
     private boolean gameOver = false;
-    private TextField nameInput = new TextField("Enter name: ");
+    private final TextField nameInput = new TextField("Enter name: ");
     private VerticalLayout myWordsLayout;
     private VerticalLayout opponentWordsLayout;
     private Dialog waitingDialogBox;
-    private LocalTime lastConnectionTime = LocalTime.now();
 
     public GridView() {
         initialisePage("");
@@ -62,6 +62,7 @@ public class GridView extends VerticalLayout {
         add(startButton);
     }
 
+    // Sends a message with grid data to other users to initiate game
     private void attemptStartGame() {
         try {
             gameController = gameFactory.startNewGame(DIMENSIONS, DURATION);
@@ -81,17 +82,24 @@ public class GridView extends VerticalLayout {
     }
 
     private void confirmStartGame(String msg) {
-        String endTime = msg.split("\\|")[1];
-        gameController.setEndTime(endTime);
-        waitingDialogBox.close();
-        removeAll();
-        createGrid();
+        if (waitingDialogBox != null){
+            String endTime = msg.split("\\|")[1];
+            if (Objects.equals(endTime, "decline")) {
+                initialisePage(nameInput.getValue());
+            } else {
+                gameController.setEndTime(endTime);
+                waitingDialogBox.close();
+                waitingDialogBox = null;
+                removeAll();
+                createGrid();
+            }
+        }
     }
 
     private void joinGame(String msg) {
         String opponentName = msg.split("\\|")[3];
         DialogBoxes.showGameRequestDialog(opponentName,
-                () -> {
+                () -> { // method if game accepted.
             try {
                 gameController = gameFactory.startReceivedGame(msg, DURATION);
                 getUI().ifPresent(ui -> GameEventBroadcaster.sendGameUpdate(
@@ -104,108 +112,199 @@ public class GridView extends VerticalLayout {
                 initialisePage("");
             }
         },
-                () -> {
-            getUI().ifPresent(ui -> GameEventBroadcaster.sendGameUpdate("C|confirm", ui));
+                () -> { // action on decline.
+            getUI().ifPresent(ui -> GameEventBroadcaster.sendGameUpdate("C|decline", ui));
             initialisePage("");
         }
         );
     }
 
+
     public void createGrid() {
-        if (gameController == null || gameController.getLettersFromGrid() == null) return;
+        if (gameController == null) return;
 
-        HorizontalLayout mainContainer = new HorizontalLayout();
-        mainContainer.setWidthFull();
-        mainContainer.setJustifyContentMode(JustifyContentMode.CENTER);
-        mainContainer.setAlignItems(Alignment.START);
+        getUI().ifPresent(ui -> ui.getPage().retrieveExtendedClientDetails(details -> {
+            int screenWidth = details.getBodyClientWidth();
+            boolean isMobile = screenWidth < 600;
+            buildLayout(isMobile);
+        }));
+    }
 
-        myWordsLayout = new VerticalLayout();
-        myWordsLayout.setWidth("200px");
-        myWordsLayout.add(new Span("My Words:"));
 
-        opponentWordsLayout = new VerticalLayout();
-        opponentWordsLayout.setWidth("200px");
-        opponentWordsLayout.add(new Span("Opponent's Words:"));
+    private void buildLayout(boolean isMobile) {
+        removeAll();
+        buttonList.clear();
 
-        VerticalLayout centerLayout = new VerticalLayout();
-        centerLayout.setWidth("auto");
-        centerLayout.setAlignItems(Alignment.CENTER); // Centers everything vertically
+        HorizontalLayout headerLayout = new HorizontalLayout();
+        headerLayout.setWidthFull();
+        headerLayout.setAlignItems(Alignment.CENTER);
 
-        VerticalLayout boardLayout = new VerticalLayout();
-        boardLayout.setAlignItems(Alignment.CENTER); // Centers the rows
-        boardLayout.setPadding(false);
+        scoreDisplay = new Span();
+        opponentScoreDisplay = new Span();
+        timeDisplay = new Span(gameController.getTimeRemaining());
+        timeDisplay.getStyle().set("font-weight", "bold");
 
-        HorizontalLayout currentRow = new HorizontalLayout();
-        currentRow.setJustifyContentMode(JustifyContentMode.CENTER); // Centers buttons in row
+        // alternate displays for mobile and desktop as full content doesn't fit on mobile.
+        if (isMobile) {
+            headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
+            headerLayout.setPadding(false);
 
-        buttonList = new ArrayList<>();
-        int count = 0;
-        for (Letter l : gameController.getLettersFromGrid()) {
-            CellButton button = new CellButton(new GridCell(l, gameController.getThisPlayer()));
-            buttonList.add(button);
-            currentRow.add(button.getButton());
-            if (++count % gameController.getGridDimensions() == 0) {
-                boardLayout.add(currentRow);
-                currentRow = new HorizontalLayout();
-                currentRow.setJustifyContentMode(JustifyContentMode.CENTER);
-            }
+            HorizontalLayout scoreGroup = new HorizontalLayout();
+            scoreGroup.setSpacing(false);
+            scoreGroup.setAlignItems(Alignment.CENTER);
+
+            scoreDisplay.setText("0");
+            scoreDisplay.getStyle().set("color", "green").set("font-weight", "bold").set("font-size", "1.5rem");
+
+            Span sep = new Span(" - ");
+            sep.getStyle().set("font-weight", "bold").set("font-size", "1.5rem").set("margin", "0 10px");
+
+            opponentScoreDisplay.setText("0");
+            opponentScoreDisplay.getStyle().set("color", "red").set("font-weight", "bold").set("font-size", "1.5rem");
+
+            scoreGroup.add(scoreDisplay, sep, opponentScoreDisplay);
+            timeDisplay.getStyle().set("font-size", "1.2rem");
+
+            headerLayout.add(scoreGroup, timeDisplay);
+
+            myWordsLayout = null;
+            opponentWordsLayout = null;
+        } else {
+            headerLayout.setJustifyContentMode(JustifyContentMode.AROUND);
+            scoreDisplay.setText("Your Score: 0");
+            opponentScoreDisplay.setText("Opponent Score: 0");
+            Styles.scoreStyle(scoreDisplay);
+            Styles.scoreStyle(opponentScoreDisplay);
+            Styles.scoreStyle(timeDisplay);
+            headerLayout.add(scoreDisplay, timeDisplay, opponentScoreDisplay);
+
+            myWordsLayout = new VerticalLayout(new Span("My Words:"));
+            myWordsLayout.setWidth("200px");
+            opponentWordsLayout = new VerticalLayout(new Span("Opponent's Words:"));
+            opponentWordsLayout.setWidth("200px");
         }
 
-        scoreDisplay = new Span("Your Score: 0");
-        opponentScoreDisplay = new Span("Opponent Score: 0");
-        timeDisplay = new Span("Time remaining: " + gameController.getTimeRemaining());
+        Div boardContainer = new Div();
+        boardContainer.getStyle().set("display", "grid");
+        boardContainer.getStyle().set("grid-template-columns", "repeat(" + gameController.getGridDimensions() + ", 1fr)");
+        boardContainer.getStyle().set("gap", "4px");
+        boardContainer.getStyle().set("width", "100%"); // Fill the gameContainer
+        boardContainer.getStyle().set("box-sizing", "border-box"); // Ensure padding doesn't cause overflow
 
-        Styles.scoreStyle(scoreDisplay);
-        Styles.scoreStyle(opponentScoreDisplay);
-        Styles.scoreStyle(timeDisplay);
+        for (Letter l : gameController.getLettersFromGrid()) {
+            CellButton cellBtn = new CellButton(new GridCell(l, gameController.getThisPlayer()));
+            Button btn = cellBtn.getButton();
+
+            btn.setWidth("100%");
+            btn.setHeight("auto");
+            btn.getStyle().set("aspect-ratio", "1 / 1");
+            btn.getStyle().set("padding", "0");
+
+            btn.getStyle().set("min-width", "0");
+            btn.getStyle().set("font-size", isMobile ? "1.2em" : "1.5em");
+            btn.getStyle().set("margin", "0");
+
+            boardContainer.add(btn);
+            buttonList.add(cellBtn);
+        }
 
         Button submitWordButton = new Button("Submit");
-        submitWordButton.addClickListener(e -> {
-            try {
-                ArrayList<String> validWordIndex = gameController.wordSubmitted();
-                scoreDisplay.setText("Your Score: " + gameController.getScore());
+        submitWordButton.addClickListener(e -> handleSubmit());
+        submitWordButton.addThemeName("primary");
+        submitWordButton.getStyle().set("margin-top", "15px");
 
-                StringBuilder indexString = new StringBuilder("U|");
-                for (String s : validWordIndex) {
-                    indexString.append(" ").append(s);
-                }
-                indexString.append("|");
-                indexString.append(gameController.getScore());
-                getUI().ifPresent(ui -> GameEventBroadcaster.sendGameUpdate(String.valueOf(indexString), ui));
+        VerticalLayout gameContainer = new VerticalLayout();
+        gameContainer.setPadding(false);
+        gameContainer.setSpacing(false);
+        gameContainer.setAlignItems(Alignment.CENTER);
+        gameContainer.add(boardContainer, submitWordButton);
 
+        if (isMobile) {
+            gameContainer.setWidth("95%");
+            gameContainer.setMaxWidth("400px");
+            submitWordButton.setWidth("50%");
+        } else {
+            gameContainer.setWidth("600px");
+            submitWordButton.setWidth("200px");
+        }
+
+        if (isMobile) {
+            Div spacer = new Div();
+            spacer.setHeight("40px");
+            spacer.setWidthFull();
+
+            setSizeFull();
+            setPadding(true);
+            setJustifyContentMode(JustifyContentMode.START);
+            setAlignItems(Alignment.CENTER);
+            add(spacer, headerLayout, gameContainer);
+        } else {
+            HorizontalLayout mainContainer = new HorizontalLayout();
+            mainContainer.setWidthFull();
+            mainContainer.setJustifyContentMode(JustifyContentMode.CENTER);
+
+            VerticalLayout centerLayout = new VerticalLayout();
+            centerLayout.setWidth("auto");
+            centerLayout.setAlignItems(Alignment.CENTER);
+            centerLayout.add(gameContainer);
+
+            mainContainer.add(myWordsLayout, centerLayout, opponentWordsLayout);
+            add(headerLayout, mainContainer);
+        }
+
+        gameOver = false;
+    }
+
+    private void handleSubmit() {
+        try {
+            ArrayList<String> validWordIndex = gameController.wordSubmitted();
+
+            if (myWordsLayout != null) {
                 String word = gameController.getMostRecentWord();
                 Span wordSpan = new Span(word);
                 wordSpan.getStyle().set("color", "green");
                 myWordsLayout.getElement().insertChild(1, wordSpan.getElement());
-
-
-            } catch (IOException ex) {
-                Notification.show(ex.getMessage());
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-                Notification.show("SQL error: " + ex.getMessage());
+                scoreDisplay.setText("Your Score: " + gameController.getScore());
+            } else {
+                String word = gameController.getMostRecentWord();
+                Notification.show("Found: " + word, 1000, Notification.Position.BOTTOM_CENTER);
+                scoreDisplay.setText(String.valueOf(gameController.getScore()));
             }
 
-            for (CellButton c : buttonList) {
-                c.deselect();
+            StringBuilder indexString = new StringBuilder("U|");
+            for (String s : validWordIndex) {
+                indexString.append(" ").append(s);
             }
-        });
+            indexString.append("|").append(gameController.getScore());
+            getUI().ifPresent(ui -> GameEventBroadcaster.sendGameUpdate(String.valueOf(indexString), ui));
 
-        gameOver = false;
-        centerLayout.add(scoreDisplay, opponentScoreDisplay, timeDisplay, boardLayout, submitWordButton);
-        mainContainer.add(myWordsLayout, centerLayout, opponentWordsLayout);
-        add(mainContainer);
+        } catch (IOException ex) {
+            Notification.show(ex.getMessage());
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Notification.show("SQL error: " + ex.getMessage());
+        }
+
+        for (CellButton c : buttonList) {
+            c.deselect();
+        }
     }
-
 
     private void updateGameFromOpponent(String msg) {
         try {
             String word = gameController.handleUpdate(msg);
-            Notification.show("Other player submitted word: " + word);
-            Span wordSpan = new Span(word);
-            wordSpan.getStyle().set("color", "green");
-            opponentWordsLayout.getElement().insertChild(1,wordSpan.getElement());
-            opponentScoreDisplay.setText("Opponent Score: "+String.valueOf(gameController.getOtherPlayerScore()));
+
+            if (opponentWordsLayout != null) {
+                Notification.show("Other player submitted word: " + word);
+                Span wordSpan = new Span(word);
+                wordSpan.getStyle().set("color", "green");
+                opponentWordsLayout.getElement().insertChild(1, wordSpan.getElement());
+                opponentScoreDisplay.setText("Opponent Score: " + gameController.getOtherPlayerScore());
+            } else {
+                Notification.show("Opponent found: " + word, 1000, Notification.Position.BOTTOM_CENTER);
+                opponentScoreDisplay.setText(String.valueOf(gameController.getOtherPlayerScore()));
+            }
+
             for (CellButton button : buttonList) {
                 button.updateButtonColour();
             }
@@ -213,6 +312,7 @@ public class GridView extends VerticalLayout {
             throw new RuntimeException(e);
         }
     }
+
 
     private void resetGame(){
         Notification.show("Game closed, please reconnect to replay");
@@ -227,9 +327,11 @@ public class GridView extends VerticalLayout {
         int scoreReceived = Integer.parseInt(msg.split("\\|")[1]);
         if (scoreReceived != gameController.getOtherPlayerScore()) {
             Notification.show("Sync error, please refresh page");
+            gameController = null;
         } else {
             boolean userWon = scoreReceived < gameController.getScore();
             DialogBoxes.showGameOverDialog(userWon, gameController.getScore(), scoreReceived, this::resetGame);
+            gameController = null;
         }
     }
 
@@ -244,31 +346,30 @@ public class GridView extends VerticalLayout {
         }
     }
 
-    private void checkDisconnection() {
-        if (ChronoUnit.SECONDS.between(LocalTime.now(), lastConnectionTime) > 2) {
-            DialogBoxes.showDisconnectedDialog(() -> initialisePage(nameInput.getValue()));
-            gameOver = true;
-        }
-    }
-
-
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         UI ui = attachEvent.getUI();
         broadcasterRegistration = GameEventBroadcaster.register(ui, message -> {
             ui.access(() -> {
 //                Notification.show("Update received!");
-                lastConnectionTime = LocalTime.now();
                 try {
-                    if ("S".equals(message.split("\\|")[0])) {
-                        joinGame(message);
-                    } else if ("U".equals(message.split("\\|")[0])) {
-                        updateGameFromOpponent(message);
-                    } else if ("F".equals(message.split("\\|")[0])) {
-                        Notification.show("Update received!");
-                        gameFinished(message);
-                    } else if ("C".equals(message.split("\\|")[0])) {
-                        confirmStartGame(message);
+                    String type = message.split("\\|")[0];
+                    if ("S".equals(type)) {
+                        if (gameController == null && waitingDialogBox == null) {
+                            joinGame(message);
+                        }
+                    } else if ("U".equals(type)) {
+                        if (gameController != null) {
+                            updateGameFromOpponent(message);
+                        }
+                    } else if ("F".equals(type)) {
+                        if (gameController != null) {
+                            gameFinished(message);
+                        }
+                    } else if ("C".equals(type)) {
+                        if (waitingDialogBox != null) {
+                            confirmStartGame(message);
+                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -284,7 +385,6 @@ public class GridView extends VerticalLayout {
                 for (CellButton button : buttonList) {
                     button.updateButtonColour();
                 }
-                checkDisconnection();
                 if (!gameOver) {
                     checkGameOver();
                 }
