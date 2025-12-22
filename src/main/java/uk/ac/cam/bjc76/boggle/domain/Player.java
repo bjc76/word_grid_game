@@ -1,12 +1,10 @@
 package uk.ac.cam.bjc76.boggle.domain;
 
 public class Player {
-    private final String name;
     private final String id;
     private int score = 0;
 
-    public Player(String name, String id) {
-        this.name = name;
+    public Player(String id) {
         this.id = id;
     }
 
@@ -16,10 +14,6 @@ public class Player {
 
     public int getScore() {
         return score;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public String getId() {

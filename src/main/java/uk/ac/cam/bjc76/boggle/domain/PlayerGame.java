@@ -1,6 +1,7 @@
 package uk.ac.cam.bjc76.boggle.domain;
 
 import java.sql.*;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -13,6 +14,10 @@ public class PlayerGame {
     public PlayerGame(Player player, WordGrid grid) throws SQLException {
         this.player = player;
         this.grid = grid;
+    }
+
+    public WordBank getBank() {
+        return bank;
     }
 
     public boolean goAttempt(ArrayList<Letter> lettersUsed) throws SQLException {
@@ -36,7 +41,6 @@ public class PlayerGame {
                 bank.insertNewCombination(newWord);
                 decayingWords.insertNewCombination(newWord);
                 player.increaseScore(lettersUsed.size());
-                System.out.println("Valid input combination for " + player.getName());
                 return true;
             }
         }
@@ -47,7 +51,11 @@ public class PlayerGame {
         ArrayList<WordCombination> expiredWords = decayingWords.getExpiredCombinations();
         for (WordCombination w : expiredWords) {
             for (Letter l : w.getLetters()) {
-                l.setUnoccupied();
+                if (l.getDecayTime().isPresent()) {
+                    if (l.getDecayTime().get().isBefore(LocalTime.now())) {
+                        l.setUnoccupied();
+                    }
+                }
             }
         }
     }
@@ -60,7 +68,6 @@ public class PlayerGame {
             l.setPlayer(player);
         }
         player.increaseScore(letters.size());
-        System.out.println("Valid input combination for " + player.getName());
     }
 
     public boolean checkIfWordAlreadyUsed(ArrayList<Letter> letters) {

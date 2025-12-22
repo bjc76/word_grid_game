@@ -11,7 +11,7 @@ public class MainTest {
     public final void main(String[] args) throws Exception {
         System.out.println("Starting game...\n");
         ArrayList<String> l = new ArrayList<>();
-        Game game = new Game("Ben", "James", 5, LetterGenerator.generate(25));
+        Game game = new Game(5, LetterGenerator.generate(25));
         game.play();
     }
 

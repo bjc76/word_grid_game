@@ -11,6 +11,7 @@ public class Letter {
     private String value;
     private boolean isSelected = false;
     private LocalTime selectedTime = LocalTime.now();
+    private Optional<LocalTime> decayExpiry = Optional.empty();
 
 
     public Letter(String value) {
@@ -21,14 +22,20 @@ public class Letter {
         return value;
     }
 
+    public boolean isOwned() {
+        return currentPlayer.isPresent();
+    }
+
+    public void setDecayExpiry(LocalTime decayExpiry) {
+        this.decayExpiry = Optional.ofNullable(decayExpiry);
+    }
+
+    public Optional<LocalTime> getDecayTime() {
+        return decayExpiry;
+    }
+
     public boolean validPlayerUsage(Player player) {
-        if (!currentPlayer.isPresent()) {
-            return true;
-        } else if (Objects.equals(player, currentPlayer)) {
-            return true;
-        } else {
-            return false;
-        }
+        return currentPlayer.map(player1 -> Objects.equals(player, player1)).orElse(true);
     }
 
     public boolean isSelected() {
@@ -54,13 +61,11 @@ public class Letter {
 
     public void setUnoccupied() {
         currentPlayer = Optional.empty();
+        decayExpiry = Optional.empty();
     }
 
     public boolean checkOwnedByOtherPlayer(Player player) {
-        if (currentPlayer.isPresent()) {
-            return !Objects.equals(player, currentPlayer);
-        }
-        return false;
+        return currentPlayer.filter(player1 -> !Objects.equals(player, player1)).isPresent();
     }
 
     public String toString() {

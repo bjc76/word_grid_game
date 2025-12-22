@@ -16,7 +16,15 @@ public class GridCell {
             } else {
                 return "#f05d42";
             }
-        } else if (cellLetter.isSelected()) {
+        } else if (cellLetter.isOwned()) {
+            if (cellLetter.isSelected()) {
+                return "#44c0eb";
+            } else {
+                return "#b1e5f7";
+            }
+        }
+
+        else if (cellLetter.isSelected()) {
             return "#c5c7c7";
         } else {
             return "#f0f1f1";

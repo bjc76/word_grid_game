@@ -15,9 +15,9 @@ public class Game {
     private Connection conn = DriverManager.getConnection("jdbc:sqlite:data/words.db");
 
 
-    public Game(String player1name, String player2name, int dimensions, ArrayList<String> gridList) throws Exception {
-        thisPlayer = new Player(player1name, "#FF0000");
-        otherPlayer = new Player(player2name, "#0000FF");
+    public Game(int dimensions, ArrayList<String> gridList) throws Exception {
+        thisPlayer = new Player("#FF0000");
+        otherPlayer = new Player("#0000FF");
         ArrayList<Letter> tempLetters = new ArrayList<>();
         for (String s : gridList) {
             tempLetters.add(new Letter(s));

@@ -10,27 +10,23 @@ import java.util.Arrays;
 
 @Service
 public class GameFactory {
-    public GameController startReceivedGame(String msg) throws SQLException, IOException {
+    public GameController startReceivedGame(String msg, int duration) throws SQLException, IOException {
         String[] msgSections = msg.split("\\|");
         ArrayList<String> lettersAsStrings = new ArrayList<>(Arrays.asList(msgSections[1].split(" ")));
         lettersAsStrings.removeFirst();
-        LocalTime endTime = LocalTime.parse(msgSections[2]);
+        int dimensions = Integer.parseInt(msgSections[2]);
         return new GameController(
-                "ben",
-                "bob",
-                4,
+                dimensions,
                 lettersAsStrings,
-                endTime
+                LocalTime.now().plusMinutes(duration)
         );
     }
 
-    public GameController startNewGame() throws SQLException, IOException {
+    public GameController startNewGame(int dimensions, int minutes) throws SQLException, IOException {
         return new GameController(
-                "bob",
-                "ben",
-                4,
-                LetterGenerator.generate(16),
-                LocalTime.now().plusMinutes(4)
+                dimensions,
+                LetterGenerator.generate(dimensions * dimensions),
+                LocalTime.now().plusMinutes(minutes)
         );
     }
 }

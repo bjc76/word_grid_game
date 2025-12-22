@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.SyncFailedException;
 import java.sql.SQLException;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -16,9 +17,9 @@ public class GameController {
     private Player thisPlayer;
     private WordGrid grid;
 
-    public GameController(String player1name, String player2name, int dimensions, ArrayList<String> gridList, LocalTime endTime) throws IOException, SQLException {
-        thisPlayer = new Player(player1name, "#FF0000");
-        otherPlayer = new Player(player2name, "#0000FF");
+    public GameController(int dimensions, ArrayList<String> gridList, LocalTime endTime) throws IOException, SQLException {
+        thisPlayer = new Player("#FF0000");
+        otherPlayer = new Player("#0000FF");
         ArrayList<Letter> tempLetters = new ArrayList<>();
         for (String s : gridList) {
             tempLetters.add(new Letter(s));
@@ -94,7 +95,45 @@ public class GameController {
         return otherPlayer.getScore();
     }
 
+    public void checkDecay() {
+        player1.checkDecayingWords();
+        player2.checkDecayingWords();
+    }
+
+    public String getTimeRemaining() {
+        long difference = ChronoUnit.SECONDS.between(LocalTime.now(), endTime);
+        return String.valueOf(difference);
+    }
+
     public LocalTime getEndTime() {
         return endTime;
+    }
+
+    public boolean gameIsFinished() {
+        return endTime.isBefore(LocalTime.now());
+    }
+
+    public ArrayList<String> getWords() {
+        ArrayList<String> words = new ArrayList<>();
+        for (WordCombination w : player1.getBank().getCombinations()) {
+            words.add(w.getWord());
+        }
+        return words;
+    }
+
+    public ArrayList<String> getOpponentWords() {
+        ArrayList<String> words = new ArrayList<>();
+        for (WordCombination w : player2.getBank().getCombinations()) {
+            words.add(w.getWord());
+        }
+        return words;
+    }
+
+    public void setEndTime(String endTimeReceived) {
+        endTime = LocalTime.parse(endTimeReceived);
+    }
+
+    public String getMostRecentWord(){
+        return player1.getBank().getMostRecentWord();
     }
 }

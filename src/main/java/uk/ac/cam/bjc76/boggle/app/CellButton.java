@@ -34,7 +34,7 @@ public class CellButton {
         updateButtonColour();
     }
 
-    private void updateButtonColour() {
+    public void updateButtonColour() {
         button.getStyle().set("background-color", cellController.getColour());
         if (cellController.isSelected() | cellController.isOwnedByOtherPlayer()) {
             button.getStyle().set("color", "white");

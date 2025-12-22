@@ -6,11 +6,15 @@ public class WordBank {
     private ArrayList<WordCombination> wordBank = new ArrayList<>();
 
     public void insertNewCombination(WordCombination w) {
-        wordBank.add(w);
+        wordBank.addFirst(w);
     }
 
     public ArrayList<WordCombination> getCombinations() {
         return wordBank;
+    }
+
+    public String getMostRecentWord() {
+        return wordBank.getFirst().getWord();
     }
 
 
